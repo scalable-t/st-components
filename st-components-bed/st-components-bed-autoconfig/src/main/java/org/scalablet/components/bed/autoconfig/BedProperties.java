@@ -27,6 +27,8 @@ public class BedProperties {
     /** mapstruct */
     private static final BedPropertiesAssemblerMapper MAPPER = Mappers.getMapper(BedPropertiesAssemblerMapper.class);
 
+    /** 全局唯一确定的应用编号，最好每次都随机生成 */
+    private String appId;
     /** 机房号 */
     private String serverRoomId;
     /** 分发器配置 */
@@ -63,6 +65,8 @@ public class BedProperties {
         private DispatcherResourceConfig defaultConfig = new DispatcherResourceConfig();
         /** 不同资源轮询配置 */
         private Map<String, DispatcherResourceConfig> resources = new HashMap<>(8);
+        /** 锁过期秒数 */
+        private long lockExpirationSeconds = BedConstants.DEFAULT_LOCK_EXPIRATION_SECONDS;
     }
 
     /** 分发器配置 */

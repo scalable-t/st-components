@@ -16,6 +16,8 @@ public final class BedConstants {
     public static final int DEFAULT_LOOP_INTERVAL_SECONDS = 30;
     /** 默认随机轮须间隔范围 */
     public static final int DEFAULT_LOOP_INTERVAL_RANDOM_SECONDS = 10;
+    /** 默认锁过期秒数，一般是一个任务执行的最长时间 */
+    public static final long DEFAULT_LOCK_EXPIRATION_SECONDS = 30 * 60;
 
     /** no construct */
     private BedConstants() {}

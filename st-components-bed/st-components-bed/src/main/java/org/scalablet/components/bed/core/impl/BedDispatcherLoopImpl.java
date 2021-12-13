@@ -79,7 +79,8 @@ public class BedDispatcherLoopImpl implements BedDispatcher {
                         final int randomSeconds = config.getLoopIntervalRandomSeconds();
                         final long random = RandomGeneratorFactory.of("Random").create().nextLong(randomSeconds);
                         final long waits = random + loopSecond;
-                        final DispatcherTask task = new DispatcherTask(resourceName, randomSeconds, loopSecond);
+                        final DispatcherTask task = new DispatcherTask(resourceName, randomSeconds, loopSecond,
+                                this.dispatcherConfig.getLockExpirationSeconds());
                         this.dispatcherPool.schedule(task, waits, TimeUnit.SECONDS);
                         log.info("BedDispatcher task will start after {}s.", waits);
                     });
@@ -110,18 +111,21 @@ public class BedDispatcherLoopImpl implements BedDispatcher {
         final int randomSeconds;
         /** 基础轮询间隔 */
         final int loopSecond;
+        /** 锁过期秒数 */
+        final long lockExpirationSeconds;
 
         /**
          * 构造
-         *
-         * @param resourceName  资源名称
-         * @param randomSeconds 随机范围，0 - randomSeconds
-         * @param loopSeconds   基础轮询间隔
+         *  @param resourceName          资源名称
+         * @param randomSeconds         随机范围，0 - randomSeconds
+         * @param loopSeconds           基础轮询间隔
+         * @param lockExpirationSeconds 锁过期秒数
          */
-        private DispatcherTask(String resourceName, int randomSeconds, int loopSeconds) {
+        private DispatcherTask(String resourceName, int randomSeconds, int loopSeconds, long lockExpirationSeconds) {
             this.resourceName = resourceName;
             this.randomSeconds = randomSeconds;
             this.loopSecond = loopSeconds;
+            this.lockExpirationSeconds = lockExpirationSeconds;
         }
 
         @Override
@@ -130,7 +134,8 @@ public class BedDispatcherLoopImpl implements BedDispatcher {
             // 2. push into Runner
             this.runCounter += 1;
             try {
-                final List<BedTask> someTasks = BedDispatcherLoopImpl.this.taskRepository.getSomeNeedRunTasks(100, );
+                final List<BedTask> someTasks = BedDispatcherLoopImpl.this.taskRepository.getSomeNeedRunTasks(
+                        100, this.resourceName, this.lockExpirationSeconds);
                 for (BedTask task : someTasks) {
                     BedDispatcherLoopImpl.this.runner.submitImmediately(task);
                 }

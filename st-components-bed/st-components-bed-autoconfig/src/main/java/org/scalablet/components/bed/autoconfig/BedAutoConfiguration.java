@@ -18,6 +18,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * bed 组件自动配置
@@ -73,12 +74,15 @@ public class BedAutoConfiguration {
     /**
      * BedTaskRepository 实现
      *
+     * @param jdbcTemplate  jdbcTemplate
+     * @param configuration 配置
      * @return BedTaskRepositoryImpl 实例
      */
     @Bean
     @ConditionalOnMissingBean(BedTaskRepository.class)
-    public BedTaskRepositoryImpl bedTaskRepositoryImpl() {
-        return new BedTaskRepositoryImpl();
+    public BedTaskRepositoryImpl bedTaskRepositoryImpl(JdbcTemplate jdbcTemplate,
+                                                       BedConfiguration configuration) {
+        return new BedTaskRepositoryImpl(jdbcTemplate, configuration);
     }
 
     /**

@@ -16,10 +16,11 @@ public interface BedTaskRepository {
      *
      * @param limit limit
      * @param resourceName
+     * @param durationSeconds
      * @return tasks
      */
     @Nonnull
-    List<BedTask> getSomeNeedRunTasks(int limit, String resourceName);
+    List<BedTask> getSomeNeedRunTasks(int limit, String resourceName, long durationSeconds);
 
     /**
      * 获取单条记录

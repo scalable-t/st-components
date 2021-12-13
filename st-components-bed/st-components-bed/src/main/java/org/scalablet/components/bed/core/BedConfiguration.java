@@ -50,6 +50,8 @@ public class BedConfiguration {
         private DispatcherResourceConfig defaultConfig;
         /** 不同资源轮询配置 */
         private Map<String, DispatcherResourceConfig> resources;
+        /** 锁过期秒数 */
+        private long lockExpirationSeconds;
     }
 
     /** 分发器配置 */
