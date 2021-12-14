@@ -251,6 +251,8 @@ public class BedRunner {
     private class ResourceThreadPoolManagement {
         /** key: resourceName, value: pool */
         final ConcurrentHashMap<String, ScheduledThreadPoolExecutor> poolMap = new ConcurrentHashMap<>(16);
+        /** 默认执行器 */
+        final ScheduledThreadPoolExecutor defaultPool = createExecutor(BedRunner.this.runnerConfig.getDefaultConfig());
 
         /**
          * 获取某个资源的线程池。如果这个资源没有相关配置，则与其他人共用默认线程池。
@@ -260,7 +262,6 @@ public class BedRunner {
          */
         @Nonnull
         ScheduledThreadPoolExecutor getPool(String resourceName) {
-            final ScheduledThreadPoolExecutor defaultPool = this.poolMap.get(BedExecutor.DEFAULT_THREAD_RESOURCE_NAME);
             return this.poolMap.computeIfAbsent(resourceName, key ->
                     Optional.ofNullable(BedRunner.this.runnerConfig.getBedPoolConfigList())
                             .flatMap(list -> list.stream().filter(v -> v.getName().equals(resourceName)).findAny())

@@ -66,7 +66,7 @@ public class BedServiceImpl implements BedFacadeService {
         Objects.requireNonNull(cmd, "cmd cannot be null");
         Check.notEmpty(cmd.getTaskId(), "cmd.getTaskId() cannot be empty (" + cmd + ")");
 
-        final String executorTypeName = executorType.getName();
+        final String executorTypeName = this.bedExecutorRegistry.getExecutorName(executorType);
 
         // get executor
         final BedExecutor<T> executor = this.bedExecutorRegistry.getExecutor(executorType);
@@ -83,6 +83,7 @@ public class BedServiceImpl implements BedFacadeService {
         final BedTask bedTask = BedTask.createNewInstance(
                 cmd.getTaskId(),
                 this.configuration.getServerRoomId(),
+                executor.getThreadResourceName(),
                 executorTypeName,
                 delaySeconds,
                 this.tracer.get(),

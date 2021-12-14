@@ -9,15 +9,18 @@ import org.scalablet.components.bed.core.BedSerializer;
 import org.scalablet.components.bed.core.BedServiceImpl;
 import org.scalablet.components.bed.core.BedTaskRepository;
 import org.scalablet.components.bed.core.BedTracer;
+import org.scalablet.components.bed.core.impl.BedDispatcherLoopImpl;
 import org.scalablet.components.bed.core.impl.BedExecutorRegistrySpringImpl;
 import org.scalablet.components.bed.core.impl.BedSerializerJacksonImpl;
 import org.scalablet.components.bed.core.impl.BedTaskRepositoryImpl;
+import org.scalablet.components.bed.core.impl.BedTracerDummyImpl;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -88,16 +91,16 @@ public class BedAutoConfiguration {
     /**
      * BedRunner 实现
      *
-     * @param runnerConfig     执行器配置
+     * @param config           框架配置
      * @param taskRepository   仓储
      * @param executorRegistry 异步执行器注册中心，存储异步执行器的实例
      * @param serializer       cmd 序列化功能
      * @return BedRunnerImpl 实例
      */
     @Bean
-    public BedRunner bedRunner(BedConfiguration.BedRunnerConfig runnerConfig, BedTaskRepository taskRepository,
+    public BedRunner bedRunner(BedConfiguration config, BedTaskRepository taskRepository,
                                BedExecutorRegistry executorRegistry, BedSerializer serializer) {
-        return new BedRunner(runnerConfig, taskRepository, executorRegistry, serializer);
+        return new BedRunner(config.getRunnerConfig(), taskRepository, executorRegistry, serializer);
     }
 
     /**
@@ -111,4 +114,33 @@ public class BedAutoConfiguration {
         return properties.toBedConfiguration();
     }
 
+    /**
+     * BedDispatcher 实现
+     *
+     * @param configuration    框架器配置
+     * @param taskRepository   仓储
+     * @param executorRegistry 任务执行器注册中心
+     * @param runner           任务执行器
+     * @return BedDispatcherImpl 实例
+     */
+    @Bean(initMethod = "init")
+    @ConditionalOnMissingBean(BedDispatcher.class)
+    public BedDispatcherLoopImpl bedDispatcherLoopImpl(BedConfiguration configuration,
+                                                       BedTaskRepository taskRepository,
+                                                       BedExecutorRegistry executorRegistry,
+                                                       BedRunner runner) {
+        return new BedDispatcherLoopImpl(configuration.getDispatcherConfig(), taskRepository, executorRegistry, runner);
+    }
+
+    /**
+     * BedTracer Dummy 实现
+     *
+     * @return BedTracerDummyImpl 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(BedTracer.class)
+    @Order(Integer.MIN_VALUE)
+    public BedTracerDummyImpl bedTracerDummyImpl() {
+        return new BedTracerDummyImpl();
+    }
 }

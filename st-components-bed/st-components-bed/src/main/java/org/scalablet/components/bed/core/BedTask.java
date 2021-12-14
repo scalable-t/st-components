@@ -22,15 +22,16 @@ public class BedTask {
      *
      * @param taskId       唯一任务 id
      * @param serverRoomId 机房号
+     * @param resourceName 资源名称
      * @param executorType Executor 万里行
      * @param delaySeconds 执行延迟
      * @param cmd          指令
      * @param traceId      跟踪号
      * @return 任务实例
      */
-    public static BedTask createNewInstance(String taskId, String serverRoomId, String executorType,
-                                     int delaySeconds, String traceId, String cmd) {
-        return new BedTask(taskId, serverRoomId, executorType, 0, BedTaskStatusEnum.INIT, delaySeconds,
+    public static BedTask createNewInstance(String taskId, String serverRoomId, String resourceName,
+                                            String executorType, int delaySeconds, String traceId, String cmd) {
+        return new BedTask(taskId, serverRoomId, resourceName, executorType, 0, BedTaskStatusEnum.INIT, delaySeconds,
                 traceId, "", cmd);
     }
 
@@ -38,6 +39,8 @@ public class BedTask {
     private String taskId;
     /** Server room id, an application can only create and execute task with their own room id */
     private String serverRoomId;
+    /** 资源名称 */
+    private String resourceName;
     /** Executor type */
     private String executorType;
     /** Executed times */

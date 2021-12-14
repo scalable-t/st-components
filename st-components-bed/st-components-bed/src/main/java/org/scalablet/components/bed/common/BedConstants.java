@@ -19,6 +19,9 @@ public final class BedConstants {
     /** 默认锁过期秒数，一般是一个任务执行的最长时间 */
     public static final long DEFAULT_LOCK_EXPIRATION_SECONDS = 30 * 60;
 
+    /** 默认机房号 */
+    public static final String DEFAULT_SERVER_ROOM_ID = "main";
+
     /** no construct */
     private BedConstants() {}
 }

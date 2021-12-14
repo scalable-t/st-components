@@ -1,6 +1,7 @@
 package org.scalablet.components.bed.autoconfig;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -9,11 +10,14 @@ import org.scalablet.components.bed.common.BedConstants;
 import org.scalablet.components.bed.core.BedConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.random.RandomGenerator;
 
 /**
  * 参数配置
@@ -21,6 +25,7 @@ import java.util.Properties;
  * @author abomb4 2021-12-11 14:26:45 +0800
  */
 @Data
+@Slf4j
 @ConfigurationProperties("st.bed")
 public class BedProperties {
 
@@ -30,7 +35,7 @@ public class BedProperties {
     /** 全局唯一确定的应用编号，最好每次都随机生成 */
     private String appId;
     /** 机房号 */
-    private String serverRoomId;
+    private String serverRoomId = BedConstants.DEFAULT_SERVER_ROOM_ID;
     /** 分发器配置 */
     private BedDispatcherConfig dispatcher = new BedDispatcherConfig();
     /** 执行器配置 */
@@ -67,6 +72,24 @@ public class BedProperties {
         private Map<String, DispatcherResourceConfig> resources = new HashMap<>(8);
         /** 锁过期秒数 */
         private long lockExpirationSeconds = BedConstants.DEFAULT_LOCK_EXPIRATION_SECONDS;
+
+        /**
+         * getter
+         *
+         * @return getter
+         */
+        public DispatcherResourceConfig getDefault() {
+            return this.defaultConfig;
+        }
+
+        /**
+         * setter
+         *
+         * @param defaultConfig setter
+         */
+        public void setDefault(DispatcherResourceConfig defaultConfig) {
+            this.defaultConfig = defaultConfig;
+        }
     }
 
     /** 分发器配置 */
@@ -84,7 +107,24 @@ public class BedProperties {
      * @return 核心层配置
      */
     public BedConfiguration toBedConfiguration() {
+        if (this.appId == null || this.appId.isEmpty()) {
+            this.appId = this.generateRandomAppId();
+            log.info("bed 生成默认 appid {}", this.appId);
+        }
         return MAPPER.fromPropertiesToConfig(this);
+    }
+
+    /**
+     * 生成随机 appid
+     *
+     * @return appid
+     */
+    private String generateRandomAppId() {
+        final RandomGenerator random = RandomGenerator.getDefault();
+        final String prefix = Base64.getEncoder()
+                .encodeToString(String.valueOf(random.nextInt(100000, 1000000)).getBytes(StandardCharsets.UTF_8));
+        final int i = random.nextInt(100000, 1000000);
+        return prefix + i;
     }
 
     /** MapStruct mapper */

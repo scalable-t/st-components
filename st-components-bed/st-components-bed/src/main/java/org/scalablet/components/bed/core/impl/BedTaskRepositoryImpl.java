@@ -45,7 +45,7 @@ public class BedTaskRepositoryImpl implements BedTaskRepository {
                         update bed_task_info
                            set app_name = ?, update_datetime = now(), status = ?
                          where server_room_id = ? and resource_name = ? and
-                         ((app_name = null and status in (?, ?)) or (status = ? and (now - update_datetime) > ?))
+                         ((app_name is null and status in (?, ?)) or (status = ? and (now() - update_datetime) > ?))
                          limit ?
                         """,
                 this.configuration.getAppId(), BedTaskStatusEnum.EXECUTING.getCode(),
@@ -53,8 +53,16 @@ public class BedTaskRepositoryImpl implements BedTaskRepository {
                 BedTaskStatusEnum.INIT.getCode(), BedTaskStatusEnum.RETRYING.getCode(),
                 BedTaskStatusEnum.EXECUTING.getCode(), durationSeconds,
                 limit);
+        final List<BedTask> query = this.jdbcTemplate.query("""
+                        select task_id, server_room_id, executor_type, executed_times,
+                               status, cmd, trace_id, message, resource_name
+                          from bed_task_info
+                        """,
+                (rs, rowNum) -> this.resultSetToTask(rs));
+
         return this.jdbcTemplate.query("""
-                        select task_id, server_room_id, executor_type, executed_times, status, cmd, trace_id, message
+                        select task_id, server_room_id, executor_type, executed_times,
+                               status, cmd, trace_id, message, resource_name
                           from bed_task_info
                          where server_room_id = ? and app_name = ? and status = ?
                         """,
@@ -67,7 +75,8 @@ public class BedTaskRepositoryImpl implements BedTaskRepository {
     @Override
     public <T extends BedTaskGet> BedTask getTaskByPrimary(T get) {
         return this.jdbcTemplate.queryForObject("""
-                        select task_id, server_room_id, executor_type, executed_times, status, cmd, trace_id, message
+                        select task_id, server_room_id, executor_type, executed_times,
+                               status, cmd, trace_id, message, resource_name
                           from bed_task_info
                          where task_id = ?
                         """,
@@ -80,10 +89,11 @@ public class BedTaskRepositoryImpl implements BedTaskRepository {
 
         this.jdbcTemplate.update("""
                         insert into bed_task_info (task_id, server_room_id, executor_type, executed_times,
-                        status, cmd, trace_id, message) values (?,?,?,?,?,?,?)
+                        status, cmd, trace_id, message, resource_name) values (?,?,?,?, ?,?,?,?,?)
                         """,
                 bedTask.getTaskId(), bedTask.getServerRoomId(), bedTask.getExecutorType(), bedTask.getExecutedTimes(),
-                bedTask.getStatus().getCode(), bedTask.getCmd(), bedTask.getTraceId(), bedTask.getLastMessage());
+                bedTask.getStatus().getCode(), bedTask.getCmd(), bedTask.getTraceId(), bedTask.getLastMessage(),
+                bedTask.getResourceName());
     }
 
     @Override
@@ -100,7 +110,8 @@ public class BedTaskRepositoryImpl implements BedTaskRepository {
         final String cmd = rs.getString(6);
         final String traceId = rs.getString(7);
         final String message = rs.getString(8);
-        return new BedTask(taskId, serverRoomId, executorType, executedTimes, BedTaskStatusEnum.getByCode(status),
-                0, traceId, message, cmd);
+        final String resourceName = rs.getString(9);
+        return new BedTask(taskId, serverRoomId, resourceName, executorType, executedTimes,
+                BedTaskStatusEnum.getByCode(status), 0, traceId, message, cmd);
     }
 }
